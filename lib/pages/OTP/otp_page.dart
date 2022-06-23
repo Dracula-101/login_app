@@ -22,6 +22,7 @@ class _OtpPageState extends State<OtpPage> {
   bool sentOTP = false;
   bool isLoading = true;
   String verificationId = "";
+  bool isPressed = false;
 
   @override
   void initState() {
@@ -208,29 +209,37 @@ class _OtpPageState extends State<OtpPage> {
             ),
             GestureDetector(
               onTap: () async {
-                FocusScopeNode currentFocus = FocusScope.of(context);
-                if (!currentFocus.hasPrimaryFocus) {
-                  currentFocus.unfocus();
-                }
-                try {
-                  await FirebaseAuth.instance
-                      .signInWithCredential(
-                    PhoneAuthProvider.credential(
-                        verificationId: verificationId,
-                        smsCode: controller.text),
-                  )
-                      .then((value) async {
-                    if (value.user != null) {
-                      Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  const LastPage(title: "You have Logged in")),
-                          (route) => false);
-                    }
+                if (!isPressed) {
+                  setState(() {
+                    isPressed = true;
                   });
-                } catch (e) {
-                  showSnackbar(context, "Invalid OTP!!");
+                  FocusScopeNode currentFocus = FocusScope.of(context);
+                  if (!currentFocus.hasPrimaryFocus) {
+                    currentFocus.unfocus();
+                  }
+                  try {
+                    await FirebaseAuth.instance
+                        .signInWithCredential(
+                      PhoneAuthProvider.credential(
+                          verificationId: verificationId,
+                          smsCode: controller.text),
+                    )
+                        .then((value) async {
+                      if (value.user != null) {
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const LastPage(
+                                    title: "You have Logged in")),
+                            (route) => false);
+                      }
+                    });
+                  } catch (e) {
+                    showSnackbar(context, "Invalid OTP!!");
+                    setState(() {
+                      isPressed = false;
+                    });
+                  }
                 }
               },
               child: Container(
